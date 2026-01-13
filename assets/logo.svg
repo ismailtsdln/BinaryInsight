@@ -1,0 +1,61 @@
+<svg width="200" height="200" viewBox="0 0 200 200"
+    xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#00ccff;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="scanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#00ff88;stop-opacity:0" />
+            <stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.5" />
+            <stop offset="100%" style="stop-color:#00ff88;stop-opacity:0" />
+        </linearGradient>
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+        <clipPath id="circleClip">
+            <circle cx="100" cy="100" r="85" />
+        </clipPath>
+    </defs>
+
+    <!-- Background Container -->
+    <rect x="10" y="10" width="180" height="180" rx="40" ry="40" fill="#0d1117" stroke="#30363d" stroke-width="2" />
+
+    <!-- Binary Matrix Background -->
+    <g clip-path="url(#circleClip)" opacity="0.3">
+        <text x="30" y="50" font-family="monospace" font-size="14" fill="#00ff88">10110101</text>
+        <text x="30" y="70" font-family="monospace" font-size="14" fill="#00ff88">01001100</text>
+        <text x="30" y="90" font-family="monospace" font-size="14" fill="#00ff88">11010111</text>
+        <text x="30" y="110" font-family="monospace" font-size="14" fill="#00ff88">00110010</text>
+        <text x="30" y="130" font-family="monospace" font-size="14" fill="#00ff88">10100101</text>
+        <text x="30" y="150" font-family="monospace" font-size="14" fill="#00ff88">01011000</text>
+
+        <!-- Matrix Rain Animation -->
+        <animateTransform attributeName="transform" type="translate" from="0 -20" to="0 0" dur="2s" repeatCount="indefinite" />
+    </g>
+
+    <!-- Central Eye / Lens Outline -->
+    <circle cx="100" cy="100" r="45" fill="none" stroke="url(#primaryGradient)" stroke-width="3" filter="url(#glow)">
+        <animate attributeName="r" values="45;48;45" dur="3s" repeatCount="indefinite" />
+        <animate attributeName="stroke-opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite" />
+    </circle>
+
+    <!-- Inner Eye Pupil -->
+    <circle cx="100" cy="100" r="15" fill="#00ff88" opacity="0.8" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.8;0.4;0.8" dur="1.5s" repeatCount="indefinite" />
+    </circle>
+
+    <!-- Scanning Line scanning down -->
+    <rect x="50" y="50" width="100" height="100" fill="url(#scanGradient)" clip-path="url(#circleClip)">
+        <animate attributeName="y" values="30;120" dur="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
+    </rect>
+
+    <!-- Tech Accents -->
+    <path d="M 60 100 L 50 100 M 140 100 L 150 100 M 100 60 L 100 50 M 100 140 L 100 150" stroke="#30363d" stroke-width="2" />
+
+</svg>
