@@ -1,5 +1,5 @@
 use anyhow::Result;
-use binary_insight_core::analysis::{disassembly, entropy, hashes};
+use binary_insight_core::analysis::{disassembly, entropy, hashes, yara};
 use binary_insight_core::binary::BinaryFile;
 use clap::Parser;
 use std::fs;
@@ -17,6 +17,10 @@ struct Args {
     /// Run in CLI mode instead of TUI
     #[arg(short, long)]
     cli: bool,
+
+    /// Path to YARA rules file
+    #[arg(long)]
+    yara: Option<String>,
 }
 
 fn main() -> Result<()> {
@@ -60,6 +64,25 @@ fn main() -> Result<()> {
         println!("  NX:     {}", binary.info.security.nx);
         println!("  RELRO:  {}", binary.info.security.relro);
         println!("  Canary: {}", binary.info.security.canary);
+
+        if let Some(yara_path) = &args.yara {
+            println!("\n[YARA Scan]");
+            match fs::read_to_string(yara_path) {
+                Ok(rules) => match yara::YaraScanner::scan(&file_data, &rules) {
+                    Ok(matches) => {
+                        if matches.is_empty() {
+                            println!("  No matches found.");
+                        } else {
+                            for m in matches {
+                                println!("  Match: {}", m);
+                            }
+                        }
+                    }
+                    Err(e) => println!("  Scan failed: {}", e),
+                },
+                Err(e) => println!("  Failed to read YARA file: {}", e),
+            }
+        }
 
         println!("\n[Disassembly (Entry Point / .text)]");
         // Try to find a code section

@@ -5,6 +5,7 @@ use goblin::pe::PE;
 pub mod disassembly;
 pub mod entropy;
 pub mod hashes;
+pub mod yara;
 
 #[derive(Debug, Default, Clone)]
 pub struct SecurityFeatures {
