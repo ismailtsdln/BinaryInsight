@@ -1,5 +1,5 @@
 use anyhow::Result;
-use binary_insight_core::analysis::{entropy, hashes};
+use binary_insight_core::analysis::{disassembly, entropy, hashes};
 use binary_insight_core::binary::BinaryFile;
 use clap::Parser;
 use std::fs;
@@ -60,6 +60,41 @@ fn main() -> Result<()> {
         println!("  NX:     {}", binary.info.security.nx);
         println!("  RELRO:  {}", binary.info.security.relro);
         println!("  Canary: {}", binary.info.security.canary);
+
+        println!("\n[Disassembly (Entry Point / .text)]");
+        // Try to find a code section
+        let code_section = binary
+            .info
+            .sections
+            .iter()
+            .find(|s| s.name == ".text" || s.name == "__text" || s.name.contains("text"));
+
+        if let Some(section) = code_section {
+            let start = section.offset as usize;
+            let end = start + section.size as usize;
+            // Ensure bounds
+            let start = start.min(file_data.len());
+            let end = end.min(file_data.len());
+
+            if start < end {
+                let code = &file_data[start..end];
+                match disassembly::disassemble(&binary.info.arch, code, section.addr, 10) {
+                    Ok(instructions) => {
+                        for ins in instructions {
+                            println!(
+                                "  0x{:x}:  {:<10} {}",
+                                ins.address, ins.mnemonic, ins.op_str
+                            );
+                        }
+                    }
+                    Err(e) => println!("  Disassembly failed: {}", e),
+                }
+            } else {
+                println!("  Section data out of bounds or empty.");
+            }
+        } else {
+            println!("  No code section found.");
+        }
 
         println!("\n[Sections]");
         println!("{:<20} {:<18} {:<18}", "Name", "Address", "Size");

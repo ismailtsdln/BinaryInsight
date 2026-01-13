@@ -20,6 +20,7 @@ pub struct SectionInfo {
     pub name: String,
     pub addr: u64,
     pub size: u64,
+    pub offset: u64,
 }
 
 #[derive(Debug)]
@@ -77,6 +78,7 @@ impl BinaryFile {
                     name,
                     addr: sh.sh_addr,
                     size: sh.sh_size,
+                    offset: sh.sh_offset,
                 }
             })
             .collect();
@@ -118,6 +120,7 @@ impl BinaryFile {
                 name: s.name().unwrap_or("<bad>").to_string(),
                 addr: s.virtual_address as u64,
                 size: s.virtual_size as u64,
+                offset: s.pointer_to_raw_data as u64,
             })
             .collect();
 
@@ -159,6 +162,7 @@ impl BinaryFile {
                                 name: section.name().unwrap_or("<bad>").to_string(),
                                 addr: section.addr,
                                 size: section.size,
+                                offset: section.offset as u64,
                             });
                         }
                     }
@@ -178,7 +182,12 @@ impl BinaryFile {
 
                 Ok(BinaryInfo {
                     format: "Mach-O".to_string(),
-                    arch: "Unknown".to_string(), // Extracting CPU type from header is doable but verbose
+                    arch: match macho.header.cputype {
+                        goblin::mach::cputype::CPU_TYPE_X86_64 => "x86_64".to_string(),
+                        goblin::mach::cputype::CPU_TYPE_X86 => "x86".to_string(),
+                        goblin::mach::cputype::CPU_TYPE_ARM64 => "aarch64".to_string(),
+                        _ => format!("Unknown ({})", macho.header.cputype),
+                    },
                     entry_point: macho.entry,
                     sections,
                     symbols,

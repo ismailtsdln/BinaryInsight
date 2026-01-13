@@ -2,6 +2,7 @@ use goblin::elf::Elf;
 use goblin::mach::Mach;
 use goblin::pe::PE;
 
+pub mod disassembly;
 pub mod entropy;
 pub mod hashes;
 

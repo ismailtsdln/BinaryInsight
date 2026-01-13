@@ -15,6 +15,8 @@ use ratatui::{
 };
 use std::io;
 
+pub mod hex_view;
+
 pub fn run(binary: BinaryFile) -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -43,6 +45,7 @@ struct App<'a> {
     binary: &'a BinaryFile,
     tab_index: usize,
     titles: Vec<&'a str>,
+    hex_viewer: hex_view::HexViewer,
 }
 
 impl<'a> App<'a> {
@@ -50,7 +53,8 @@ impl<'a> App<'a> {
         Self {
             binary,
             tab_index: 0,
-            titles: vec!["Info", "Sections", "Symbols"],
+            titles: vec!["Info", "Sections", "Symbols", "Hex"],
+            hex_viewer: hex_view::HexViewer::new(),
         }
     }
 
@@ -78,6 +82,29 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, binary: &BinaryFile) -> Resul
                 KeyCode::Char('q') => return Ok(()),
                 KeyCode::Right | KeyCode::Tab => app.next_tab(),
                 KeyCode::Left | KeyCode::BackTab => app.previous_tab(),
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if app.titles[app.tab_index] == "Hex" {
+                        app.hex_viewer.scroll_down(app.binary.data.len());
+                    }
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    if app.titles[app.tab_index] == "Hex" {
+                        app.hex_viewer.scroll_up();
+                    }
+                }
+                KeyCode::PageDown => {
+                    if app.titles[app.tab_index] == "Hex" {
+                        let height = terminal.size().map(|r| r.height).unwrap_or(20) as usize;
+                        app.hex_viewer
+                            .scroll_page_down(app.binary.data.len(), height);
+                    }
+                }
+                KeyCode::PageUp => {
+                    if app.titles[app.tab_index] == "Hex" {
+                        let height = terminal.size().map(|r| r.height).unwrap_or(20) as usize;
+                        app.hex_viewer.scroll_page_up(height);
+                    }
+                }
                 _ => {}
             }
         }
@@ -110,6 +137,7 @@ fn ui(f: &mut Frame, app: &App) {
         0 => draw_info_tab(f, app, chunks[1]),
         1 => draw_sections_tab(f, app, chunks[1]),
         2 => draw_symbols_tab(f, app, chunks[1]),
+        3 => app.hex_viewer.draw(f, chunks[1], &app.binary.data),
         _ => {}
     }
 }
