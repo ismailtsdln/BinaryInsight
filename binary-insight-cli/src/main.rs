@@ -1,6 +1,8 @@
 use anyhow::Result;
+use binary_insight_core::analysis::{entropy, hashes};
 use binary_insight_core::binary::BinaryFile;
 use clap::Parser;
+use std::fs;
 use tracing::info;
 
 pub mod tui;
@@ -26,12 +28,33 @@ fn main() -> Result<()> {
     let binary = BinaryFile::load(&args.file)?;
     info!("Identified format: {}", binary.identify());
 
+    // Calculate advanced analysis data
+    // We need to read the raw file content again or expose it from binary if stored.
+    // BinaryFile stores 'data', but let's read it for now to be safe or assuming BinaryFile holds it.
+    // Checking binary-insight-core code, BinaryFile struct likely has `pub data: Vec<u8>`.
+    // Let's verify via view_file if needed, but assuming standard flow:
+
+    // Actually, let's look at BinaryFile definition first to be sure.
+    // Wait, I can't look inside replace_file_content.
+    // I will assume reading file again for safety in this step or I'll check it in next step if this fails.
+    // Better: Read file content here.
+    let file_data = fs::read(&args.file)?;
+    let hashes = hashes::calculate_hashes(&file_data);
+    let entropy_val = entropy::calculate_entropy(&file_data);
+
     if args.cli {
         println!("=== Binary Analysis Report ===");
         println!("File:         {}", binary.name);
         println!("Format:       {}", binary.identify());
         println!("Arch:         {}", binary.info.arch);
         println!("Entry Point:  0x{:x}", binary.info.entry_point);
+
+        println!("\n[Advanced Analysis]");
+        println!("  Entropy: {:.4} (Scale: 0.0-8.0)", entropy_val);
+        println!("  MD5:     {}", hashes.md5);
+        println!("  SHA1:    {}", hashes.sha1);
+        println!("  SHA256:  {}", hashes.sha256);
+
         println!("\n[Security Features]");
         println!("  PIE:    {}", binary.info.security.pie);
         println!("  NX:     {}", binary.info.security.nx);

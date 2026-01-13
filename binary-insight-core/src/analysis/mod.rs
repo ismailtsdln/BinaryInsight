@@ -2,6 +2,9 @@ use goblin::elf::Elf;
 use goblin::mach::Mach;
 use goblin::pe::PE;
 
+pub mod entropy;
+pub mod hashes;
+
 #[derive(Debug, Default, Clone)]
 pub struct SecurityFeatures {
     pub pie: bool,
