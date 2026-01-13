@@ -1,6 +1,6 @@
 <div align="center">
 
-![BinaryInsight Banner](/Users/ismailtasdelen/.gemini/antigravity/brain/03cff942-4edf-49a1-8970-07491a39d766/binary_insight_banner.svg)
+![BinaryInsight Logo](assets/logo.svg)
 
 # BinaryInsight
 
