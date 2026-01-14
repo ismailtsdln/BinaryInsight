@@ -46,6 +46,7 @@ struct App<'a> {
     tab_index: usize,
     titles: Vec<&'a str>,
     hex_viewer: hex_view::HexViewer,
+    disasm_offset: usize,
 }
 
 impl<'a> App<'a> {
@@ -53,8 +54,9 @@ impl<'a> App<'a> {
         Self {
             binary,
             tab_index: 0,
-            titles: vec!["Info", "Sections", "Symbols", "Hex"],
+            titles: vec!["Info", "Sections", "Symbols", "Disasm", "Hex"],
             hex_viewer: hex_view::HexViewer::new(),
+            disasm_offset: 0,
         }
     }
 
@@ -85,11 +87,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, binary: &BinaryFile) -> Resul
                 KeyCode::Down | KeyCode::Char('j') => {
                     if app.titles[app.tab_index] == "Hex" {
                         app.hex_viewer.scroll_down(app.binary.data.len());
+                    } else if app.titles[app.tab_index] == "Disasm" {
+                        if app.disasm_offset < app.binary.info.disassembly.len().saturating_sub(1) {
+                            app.disasm_offset += 1;
+                        }
                     }
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
                     if app.titles[app.tab_index] == "Hex" {
                         app.hex_viewer.scroll_up();
+                    } else if app.titles[app.tab_index] == "Disasm" {
+                        if app.disasm_offset > 0 {
+                            app.disasm_offset -= 1;
+                        }
                     }
                 }
                 KeyCode::PageDown => {
@@ -97,12 +107,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, binary: &BinaryFile) -> Resul
                         let height = terminal.size().map(|r| r.height).unwrap_or(20) as usize;
                         app.hex_viewer
                             .scroll_page_down(app.binary.data.len(), height);
+                    } else if app.titles[app.tab_index] == "Disasm" {
+                        let height = terminal.size().map(|r| r.height).unwrap_or(20) as usize;
+                        let max_offset = app.binary.info.disassembly.len().saturating_sub(1);
+                        app.disasm_offset = (app.disasm_offset + height).min(max_offset);
                     }
                 }
                 KeyCode::PageUp => {
                     if app.titles[app.tab_index] == "Hex" {
                         let height = terminal.size().map(|r| r.height).unwrap_or(20) as usize;
                         app.hex_viewer.scroll_page_up(height);
+                    } else if app.titles[app.tab_index] == "Disasm" {
+                        let height = terminal.size().map(|r| r.height).unwrap_or(20) as usize;
+                        app.disasm_offset = app.disasm_offset.saturating_sub(height);
                     }
                 }
                 _ => {}
@@ -137,7 +154,8 @@ fn ui(f: &mut Frame, app: &App) {
         0 => draw_info_tab(f, app, chunks[1]),
         1 => draw_sections_tab(f, app, chunks[1]),
         2 => draw_symbols_tab(f, app, chunks[1]),
-        3 => app.hex_viewer.draw(f, chunks[1], &app.binary.data),
+        3 => draw_disassembly_tab(f, app, chunks[1]),
+        4 => app.hex_viewer.draw(f, chunks[1], &app.binary.data),
         _ => {}
     }
 }
@@ -167,6 +185,7 @@ fn draw_info_tab(f: &mut Frame, app: &App, area: Rect) {
         Line::from(""),
         Line::from(format!("Total Sections: {}", info.sections.len())),
         Line::from(format!("Total Symbols:  {}", info.symbols.len())),
+        Line::from(format!("Disassembled:   {} instrs", info.disassembly.len())),
     ];
     let p =
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("General Info"));
@@ -223,6 +242,43 @@ fn draw_symbols_tab(f: &mut Frame, app: &App, area: Rect) {
         Block::default()
             .borders(Borders::ALL)
             .title("Symbols (First 100)"),
+    );
+    f.render_widget(table, area);
+}
+
+fn draw_disassembly_tab(f: &mut Frame, app: &App, area: Rect) {
+    let header_cells = ["Address", "Mnemonic", "Operands"]
+        .iter()
+        .map(|h| Cell::from(*h).style(Style::default().add_modifier(Modifier::BOLD)));
+    let header = Row::new(header_cells).height(1).bottom_margin(1);
+
+    let rows = app
+        .binary
+        .info
+        .disassembly
+        .iter()
+        .skip(app.disasm_offset)
+        .map(|ins| {
+            Row::new(vec![
+                Cell::from(format!("0x{:x}", ins.address)),
+                Cell::from(ins.mnemonic.clone()).style(Style::default().fg(Color::Yellow)),
+                Cell::from(ins.op_str.clone()),
+            ])
+        });
+
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(16),
+            Constraint::Length(10),
+            Constraint::Min(20),
+        ],
+    )
+    .header(header)
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(format!("Disassembly (Offset {})", app.disasm_offset)),
     );
     f.render_widget(table, area);
 }

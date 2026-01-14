@@ -176,7 +176,6 @@ impl BinaryFile {
 
                 let symbols = macho
                     .symbols()
-                    .into_iter()
                     .filter_map(|s| s.ok())
                     .map(|(name, nlist)| SymbolInfo {
                         name: name.to_string(),

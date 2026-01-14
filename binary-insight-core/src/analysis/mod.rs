@@ -55,9 +55,7 @@ pub fn analyze_security_elf(elf: &Elf) -> SecurityFeatures {
         } else {
             false
         }
-    }) {
-        features.canary = true;
-    } else if elf.dynsyms.iter().any(|sym| {
+    }) || elf.dynsyms.iter().any(|sym| {
         if let Some(name) = elf.dynstrtab.get_at(sym.st_name) {
             name.contains("__stack_chk_fail")
         } else {

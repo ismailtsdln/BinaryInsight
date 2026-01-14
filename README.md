@@ -1,5 +1,7 @@
 <div align="center">
 
+![BinaryInsight Logo](assets/logo.svg)
+
 ![BinaryInsight Banner](assets/banner.svg)
 
 # BinaryInsight
