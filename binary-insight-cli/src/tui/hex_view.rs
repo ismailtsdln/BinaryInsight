@@ -18,7 +18,15 @@ impl HexViewer {
             bytes_per_row: 16,
         }
     }
+}
 
+impl Default for HexViewer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl HexViewer {
     pub fn scroll_down(&mut self, total_bytes: usize) {
         if self.scroll_offset + self.bytes_per_row < total_bytes {
             self.scroll_offset += self.bytes_per_row;
@@ -93,7 +101,13 @@ impl HexViewer {
                 // Ascii part
                 let ascii_string: String = chunk
                     .iter()
-                    .map(|&b| if b >= 32 && b <= 126 { b as char } else { '.' })
+                    .map(|&b| {
+                        if (32..=126).contains(&b) {
+                            b as char
+                        } else {
+                            '.'
+                        }
+                    })
                     .collect();
 
                 let line = Line::from(vec![

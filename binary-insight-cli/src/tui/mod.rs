@@ -87,19 +87,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, binary: &BinaryFile) -> Resul
                 KeyCode::Down | KeyCode::Char('j') => {
                     if app.titles[app.tab_index] == "Hex" {
                         app.hex_viewer.scroll_down(app.binary.data.len());
-                    } else if app.titles[app.tab_index] == "Disasm" {
-                        if app.disasm_offset < app.binary.info.disassembly.len().saturating_sub(1) {
-                            app.disasm_offset += 1;
-                        }
+                    } else if app.titles[app.tab_index] == "Disasm"
+                        && app.disasm_offset < app.binary.info.disassembly.len().saturating_sub(1)
+                    {
+                        app.disasm_offset += 1;
                     }
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
                     if app.titles[app.tab_index] == "Hex" {
                         app.hex_viewer.scroll_up();
-                    } else if app.titles[app.tab_index] == "Disasm" {
-                        if app.disasm_offset > 0 {
-                            app.disasm_offset -= 1;
-                        }
+                    } else if app.titles[app.tab_index] == "Disasm" && app.disasm_offset > 0 {
+                        app.disasm_offset -= 1;
                     }
                 }
                 KeyCode::PageDown => {
