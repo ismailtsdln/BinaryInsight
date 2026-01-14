@@ -13,6 +13,7 @@ pub struct BinaryInfo {
     pub symbols: Vec<SymbolInfo>,
     pub security: analysis::SecurityFeatures,
     pub strings: Vec<String>,
+    pub disassembly: Vec<analysis::disassembly::InstructionInfo>,
     pub analysis: Option<AnalysisData>,
 }
 
@@ -110,6 +111,7 @@ impl BinaryFile {
             symbols,
             security,
             strings: Vec::new(),
+            disassembly: Vec::new(),
             analysis: None,
         })
     }
@@ -150,6 +152,7 @@ impl BinaryFile {
             symbols,
             security,
             strings: Vec::new(),
+            disassembly: Vec::new(),
             analysis: None,
         })
     }
@@ -196,6 +199,7 @@ impl BinaryFile {
                     symbols,
                     security,
                     strings: Vec::new(),
+                    disassembly: Vec::new(),
                     analysis: None,
                 })
             }

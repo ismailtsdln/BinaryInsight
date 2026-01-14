@@ -52,6 +52,30 @@ fn main() -> Result<()> {
         hashes: Some(hashes.clone()),
     });
 
+    // Perform Disassembly Analysis
+    let code_section = binary
+        .info
+        .sections
+        .iter()
+        .find(|s| s.name == ".text" || s.name == "__text" || s.name.contains("text"));
+
+    if let Some(section) = code_section {
+        let start = section.offset as usize;
+        let end = start + section.size as usize;
+        let start = start.min(file_data.len());
+        let end = end.min(file_data.len());
+
+        if start < end {
+            let code = &file_data[start..end];
+            // Disassemble up to 1000 instructions for TUI/CLI
+            if let Ok(instructions) =
+                disassembly::disassemble(&binary.info.arch, code, section.addr, 1000)
+            {
+                binary.info.disassembly = instructions;
+            }
+        }
+    }
+
     if args.cli {
         println!("=== Binary Analysis Report ===");
         println!("File:         {}", binary.name);
@@ -91,38 +115,22 @@ fn main() -> Result<()> {
         }
 
         println!("\n[Disassembly (Entry Point / .text)]");
-        // Try to find a code section
-        let code_section = binary
-            .info
-            .sections
-            .iter()
-            .find(|s| s.name == ".text" || s.name == "__text" || s.name.contains("text"));
-
-        if let Some(section) = code_section {
-            let start = section.offset as usize;
-            let end = start + section.size as usize;
-            // Ensure bounds
-            let start = start.min(file_data.len());
-            let end = end.min(file_data.len());
-
-            if start < end {
-                let code = &file_data[start..end];
-                match disassembly::disassemble(&binary.info.arch, code, section.addr, 10) {
-                    Ok(instructions) => {
-                        for ins in instructions {
-                            println!(
-                                "  0x{:x}:  {:<10} {}",
-                                ins.address, ins.mnemonic, ins.op_str
-                            );
-                        }
-                    }
-                    Err(e) => println!("  Disassembly failed: {}", e),
-                }
-            } else {
-                println!("  Section data out of bounds or empty.");
+        if !binary.info.disassembly.is_empty() {
+            // Show only first 20 for CLI nicely or all if piped? Let's show first 20-50.
+            for ins in binary.info.disassembly.iter().take(50) {
+                println!(
+                    "  0x{:x}:  {:<10} {}",
+                    ins.address, ins.mnemonic, ins.op_str
+                );
+            }
+            if binary.info.disassembly.len() > 50 {
+                println!(
+                    "  ... ({} more instructions)",
+                    binary.info.disassembly.len() - 50
+                );
             }
         } else {
-            println!("  No code section found.");
+            println!("  No disassembly available (checked .text section).");
         }
 
         println!("\n[Sections]");
