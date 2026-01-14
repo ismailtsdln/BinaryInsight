@@ -3,7 +3,7 @@ use serde::Serialize;
 use sha1::Sha1;
 use sha2::{Digest, Sha256};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct FileHashes {
     pub md5: String,
     pub sha1: String,

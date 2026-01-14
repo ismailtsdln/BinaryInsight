@@ -13,6 +13,7 @@ pub struct BinaryInfo {
     pub symbols: Vec<SymbolInfo>,
     pub security: analysis::SecurityFeatures,
     pub strings: Vec<String>,
+    pub analysis: Option<AnalysisData>,
 }
 
 #[derive(Debug)]
@@ -109,6 +110,7 @@ impl BinaryFile {
             symbols,
             security,
             strings: Vec::new(),
+            analysis: None,
         })
     }
 
@@ -148,6 +150,7 @@ impl BinaryFile {
             symbols,
             security,
             strings: Vec::new(),
+            analysis: None,
         })
     }
 
@@ -193,6 +196,7 @@ impl BinaryFile {
                     symbols,
                     security,
                     strings: Vec::new(),
+                    analysis: None,
                 })
             }
             mach::Mach::Fat(_) => Ok(BinaryInfo {
@@ -205,4 +209,10 @@ impl BinaryFile {
     pub fn identify(&self) -> &str {
         &self.info.format
     }
+}
+
+#[derive(Debug, Default)]
+pub struct AnalysisData {
+    pub entropy: f64,
+    pub hashes: Option<analysis::hashes::FileHashes>,
 }

@@ -29,7 +29,7 @@ fn main() -> Result<()> {
 
     info!("Analyzing file: {}", args.file);
 
-    let binary = BinaryFile::load(&args.file)?;
+    let mut binary = BinaryFile::load(&args.file)?;
     info!("Identified format: {}", binary.identify());
 
     // Calculate advanced analysis data
@@ -45,6 +45,12 @@ fn main() -> Result<()> {
     let file_data = fs::read(&args.file)?;
     let hashes = hashes::calculate_hashes(&file_data);
     let entropy_val = entropy::calculate_entropy(&file_data);
+
+    // Populate analysis data
+    binary.info.analysis = Some(binary_insight_core::binary::AnalysisData {
+        entropy: entropy_val,
+        hashes: Some(hashes.clone()),
+    });
 
     if args.cli {
         println!("=== Binary Analysis Report ===");
